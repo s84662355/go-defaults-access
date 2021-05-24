@@ -2,9 +2,10 @@ package access
 
 import (
 	"errors"
-	_ "fmt"
+	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 func setIntField(value string, bitSize int, field reflect.Value) error {
@@ -82,85 +83,6 @@ func setWithProperType(valueKind reflect.Kind, val string, structField reflect.V
 	case reflect.String:
 		structField.SetString(val)
 	default:
-
-		if valueKind == reflect.Slice {
-			vals := strings.Split(val, ",")
-			switch structField.Type() {
-			case reflect.TypeOf([]string{}):
-				structField.Set(reflect.ValueOf(vals))
-			case reflect.TypeOf([]int{}):
-				t := make([]int, len(vals))
-				for i, v := range vals {
-					val, err := strconv.ParseInt(v, 10, 32)
-					if err != nil {
-						return fmt.Errorf("%s:%s", prefix, err)
-					}
-					t[i] = int(val)
-				}
-				structField.Set(reflect.ValueOf(t))
-			case reflect.TypeOf([]int64{}):
-				t := make([]int64, len(vals))
-				for i, v := range vals {
-					val, err := strconv.ParseInt(v, 10, 64)
-					if err != nil {
-						return fmt.Errorf("%s:%s", prefix, err)
-					}
-					t[i] = val
-				}
-				structField.Set(reflect.ValueOf(t))
-			case reflect.TypeOf([]uint{}):
-				t := make([]uint, len(vals))
-				for i, v := range vals {
-					val, err := strconv.ParseUint(v, 10, 32)
-					if err != nil {
-						return fmt.Errorf("%s:%s", prefix, err)
-					}
-					t[i] = uint(val)
-				}
-				structField.Set(reflect.ValueOf(t))
-			case reflect.TypeOf([]uint64{}):
-				t := make([]uint64, len(vals))
-				for i, v := range vals {
-					val, err := strconv.ParseUint(v, 10, 64)
-					if err != nil {
-						return fmt.Errorf("%s:%s", prefix, err)
-					}
-					t[i] = val
-				}
-				structField.Set(reflect.ValueOf(t))
-			case reflect.TypeOf([]float32{}):
-				t := make([]float32, len(vals))
-				for i, v := range vals {
-					val, err := strconv.ParseFloat(v, 32)
-					if err != nil {
-						return fmt.Errorf("%s:%s", prefix, err)
-					}
-					t[i] = float32(val)
-				}
-				structField.Set(reflect.ValueOf(t))
-			case reflect.TypeOf([]float64{}):
-				t := make([]float64, len(vals))
-				for i, v := range vals {
-					val, err := strconv.ParseFloat(v, 64)
-					if err != nil {
-						return fmt.Errorf("%s:%s", prefix, err)
-					}
-					t[i] = val
-				}
-				structField.Set(reflect.ValueOf(t))
-			case reflect.TypeOf([]bool{}):
-				t := make([]bool, len(vals))
-				for i, v := range vals {
-					val, err := parseBool(v)
-					if err != nil {
-						return fmt.Errorf("%s:%s", prefix, err)
-					}
-					t[i] = val
-				}
-				structField.Set(reflect.ValueOf(t))
-			}
-		}
-
 		return errors.New("unknown type")
 	}
 	return nil
@@ -179,7 +101,7 @@ func set(iface interface{}) error {
 			continue
 		}
 
-		if !structField.IsNil() {
+		if !structField.IsZero() {
 			continue
 		}
 
@@ -195,6 +117,12 @@ func set(iface interface{}) error {
 			if err == nil {
 				continue
 			}
+
+		case reflect.Slice:
+			err = setSlice(structField, defaultValue)
+			if err == nil {
+				continue
+			}
 		default:
 			err = setWithProperType(kind, defaultValue, structField)
 			if err == nil {
@@ -204,7 +132,7 @@ func set(iface interface{}) error {
 
 		if structField.Type().NumMethod() > 1 && structField.CanInterface() {
 			if u, ok := structField.Interface().(Unmarshaler); ok {
-				if !u.IsNil() {
+				if !u.Empty() {
 					continue
 				}
 				err = u.Default(defaultValue)
@@ -217,7 +145,6 @@ func set(iface interface{}) error {
 		return err
 	}
 	return nil
-
 }
 
 func setPointer(v reflect.Value, defaultValue string) error {
@@ -228,6 +155,167 @@ func setPointer(v reflect.Value, defaultValue string) error {
 		elem := v.Elem()
 		return setWithProperType(elem.Kind(), defaultValue, elem)
 	}
+}
+
+func setSlice(structField reflect.Value, val string) error {
+	vals := strings.Split(val, ",")
+	switch structField.Type() {
+	case reflect.TypeOf([]string{}):
+		structField.Set(reflect.ValueOf(vals))
+	case reflect.TypeOf([]int{}):
+		t := make([]int, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseInt(v, 10, 32)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = int(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]int8{}):
+		t := make([]int8, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseInt(v, 10, 8)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = int8(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]int16{}):
+		t := make([]int16, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseInt(v, 10, 16)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = int16(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]int32{}):
+		t := make([]int32, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseInt(v, 10, 32)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = int32(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]int64{}):
+		t := make([]int64, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = val
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]uint{}):
+		t := make([]uint, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseUint(v, 10, 32)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = uint(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]uint32{}):
+		t := make([]uint32, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseUint(v, 10, 32)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = uint32(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]uint8{}):
+		t := make([]uint8, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseUint(v, 10, 8)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = uint8(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]uint16{}):
+		t := make([]uint16, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseUint(v, 10, 16)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = uint16(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]uint64{}):
+		t := make([]uint64, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseUint(v, 10, 64)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = val
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]float32{}):
+		t := make([]float32, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseFloat(v, 32)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = float32(val)
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]float64{}):
+		t := make([]float64, len(vals))
+		for i, v := range vals {
+			val, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = val
+		}
+		structField.Set(reflect.ValueOf(t))
+	case reflect.TypeOf([]bool{}):
+		t := make([]bool, len(vals))
+		for i, v := range vals {
+			val, err := parseBool(v)
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			t[i] = val
+		}
+		structField.Set(reflect.ValueOf(t))
+	default:
+		newv := reflect.MakeSlice(structField.Type(), len(vals), len(vals))
+		structField.Set(newv)
+		for i, v := range vals {
+			err := setPointer(structField.Index(i), v)
+			if err != nil {
+				return err
+			}
+			if u, ok := structField.Index(i).Interface().(Unmarshaler); ok {
+				if !u.Empty() {
+					continue
+				}
+				err = u.Default(v)
+				if err == nil {
+					continue
+				} else {
+					return err
+				}
+			}
+
+		}
+	}
+
+	return nil
 }
 
 func parseBool(v string) (bool, error) {

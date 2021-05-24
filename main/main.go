@@ -21,43 +21,47 @@ type A struct {
 	M   *float32 `default:"3.555"`
 	N   *float64 `default:"33.5555555"`
 	ZZZ *BBBB    `default:"5555555"`
+	O   []bool   `default:"true,false,false,true"`
+
+	P []*BBBB `default:"4,6,7,8,8"`
 }
 
 type BBBB struct {
-	aaa string
+	aaa []string
 }
 
 func (bb *BBBB) Default(val string) error {
-	bb.aaa = val
-	fmt.Println("bdbd")
-
+	bb.aaa = []string{val}
 	return nil
 }
 
-func (bb BBBB) IsNil() bool {
-	return false
+func (bb BBBB) Empty() bool {
+	return true
 }
 
 func main() {
 	aaa := A{}
-	//AA := "ccccccc"
-	//aaa.AA = &AA
+	AA := "ccccccc"
+	aaa.AA = &AA
 	access.Set(&aaa)
-	/*
-		fmt.Println(*aaa.AA)
-		fmt.Println(*aaa.B)
-		fmt.Println(*aaa.C)
-		fmt.Println(*aaa.D)
-		fmt.Println(*aaa.E)
-		fmt.Println(*aaa.F)
-		fmt.Println(*aaa.G)
-		fmt.Println(*aaa.H)
-		fmt.Println(*aaa.I)
-		fmt.Println(*aaa.J)
-		fmt.Println(*aaa.K)
-		fmt.Println(*aaa.L)
-		fmt.Println(*aaa.M)
-		fmt.Println(*aaa.N)
-	*/
+
+	fmt.Println(*aaa.AA)
+	fmt.Println(*aaa.B)
+	fmt.Println(*aaa.C)
+	fmt.Println(*aaa.D)
+	fmt.Println(*aaa.E)
+	fmt.Println(*aaa.F)
+	fmt.Println(*aaa.G)
+	fmt.Println(*aaa.H)
+	fmt.Println(*aaa.I)
+	fmt.Println(*aaa.J)
+	fmt.Println(*aaa.K)
+	fmt.Println(*aaa.L)
+	fmt.Println(*aaa.M)
+	fmt.Println(*aaa.N)
+
+	fmt.Println(aaa.O)
+	fmt.Println(aaa.P)
+
 	fmt.Println(aaa.ZZZ)
 }
