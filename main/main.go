@@ -35,7 +35,7 @@ func (bb *BBBB) Default(val string) error {
 	return nil
 }
 
-func (bb BBBB) Empty() bool {
+func (bb BBBB) IsZero() bool {
 	return true
 }
 

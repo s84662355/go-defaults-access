@@ -132,7 +132,7 @@ func set(iface interface{}) error {
 
 		if structField.Type().NumMethod() > 1 && structField.CanInterface() {
 			if u, ok := structField.Interface().(Unmarshaler); ok {
-				if !u.Empty() {
+				if !u.IsZero() {
 					continue
 				}
 				err = u.Default(defaultValue)
@@ -301,7 +301,7 @@ func setSlice(structField reflect.Value, val string) error {
 				return err
 			}
 			if u, ok := structField.Index(i).Interface().(Unmarshaler); ok {
-				if !u.Empty() {
+				if !u.IsZero() {
 					continue
 				}
 				err = u.Default(v)
